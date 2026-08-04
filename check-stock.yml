@@ -1,0 +1,43 @@
+name: Check FirstCry stock
+
+on:
+  schedule:
+    # every 15 minutes. GitHub's minimum is 5 minutes, but scheduled runs
+    # can lag under load — 15 is a reliable, low-drama interval to start with.
+    - cron: "*/15 * * * *"
+  workflow_dispatch: {}  # lets you trigger a manual run from the Actions tab to test
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      # state.json remembers what was last seen in/out of stock, so you
+      # only get notified on a *change*, not every 15 minutes.
+      - name: Restore state
+        uses: actions/cache@v4
+        with:
+          path: state.json
+          key: restock-state-${{ github.run_id }}
+          restore-keys: |
+            restock-state-
+
+      - name: Run stock check
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+        run: python bot.py
+
+      - name: Save state
+        uses: actions/cache@v4
+        with:
+          path: state.json
+          key: restock-state-${{ github.run_id }}

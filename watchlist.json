@@ -1,0 +1,13 @@
+{
+  "_comment": "Add one entry per product you want to watch. Name is just a label for your notifications — get the URL by opening the product page on firstcry.com and copying it exactly (the one ending in /product-detail).",
+  "products": [
+    {
+      "name": "LEGO DeLorean 77256",
+      "url": "https://www.firstcry.com/PASTE-PRODUCT-URL-HERE/product-detail"
+    },
+    {
+      "name": "Hot Wheels example",
+      "url": "https://www.firstcry.com/hot-wheels/hot-wheels-die-cast-free-wheel-power-trip-2-5-porsche-917k-light-blue-and-orange/23973361/product-detail"
+    }
+  ]
+}
