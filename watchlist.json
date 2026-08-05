@@ -2,12 +2,109 @@
   "_comment": "Add one entry per product you want to watch. Name is just a label for your notifications — get the URL by opening the product page on firstcry.com and copying it exactly (the one ending in /product-detail).",
   "products": [
     {
-      "name": "LEGO DeLorean 77256",
-      "url": "https://www.firstcry.com/hot-wheels/hot-wheels-premium-collector-display-sets-3-cars-and-1-transporter-white/21497090/product-detail"
+      "name": "Hotwheels Silver Series Jeep",
+      "url": "https://www.firstcry.com/hot-wheels/hot-wheels-2019-jeep-grand-cherokee-trackhawk-diecast-model-car-white/24007866/product-detail"
     },
     {
-      "name": "Hot Wheels example",
+      "name": "Hotwheels Silver Series Ford",
+      "url": "https://www.firstcry.com/hot-wheels/hot-wheels-2019-ford-ranger-raptor-diecast-model-car-grey/24007870/product-detail"
+    },
+    {
+      "name": "Hotwheels Silver Series BMW",
+      "url": "https://www.firstcry.com/hot-wheels/hot-wheels-1-64-scale-celebration-toy-car-yellow/20290031/product-detail"
+    },
+    {
+      "name": "Hotwheels F1 5 Car Pack 2025",
+      "url": "https://www.firstcry.com/hot-wheels/hot-wheels-formula-1-die-cast-toy-cars-in-1-64-scale-pack-of-5-multicolor/21993970/product-detail"
+    },
+    {
+      "name": "Hotwheels Barbie",
+      "url": "https://www.firstcry.com/hot-wheels/hot-wheels-barbie-custom-gmc-panel-van-fourgonnette-gmc-personnalisee-die-casttoy-car-blue-and-orange/23029510/product-detail"
+    },
+    {
+      "name": "Hotwheels Premium Porsche",
+      "url": "https://www.firstcry.com/hot-wheels/hot-wheels-forza-66-porsche-906-carrera-6-die-cast-toy-car-orange/23029590/product-detail"
+    },
+    {
+      "name": "Hotwheels Ferrari SF90",
+      "url": "https://www.firstcry.com/hot-wheels/hot-wheels-ferrari-sf90-stradale-41-250-die-cast-toy-car-black/23075648/product-detail"
+    },
+    {
+      "name": "Hotwheels Ferrari Dino",
+      "url": "https://www.firstcry.com/hot-wheels/hot-wheels-dino-206-gt-150-250-die-cast-toy-car-red/23075650/product-detail"
+    },
+    {
+      "name": "Hotwheels Silver Series Japan 6 pack",
+      "url": "https://www.firstcry.com/hot-wheels/hot-wheels-streets-of-jpn-die-cast-free-wheel-toy-car-pack-of-6-multicolor/23700379/product-detail"
+    },
+    {
+      "name": "Hotwheels Silver Series Euro 6 pack",
+      "url": "https://www.firstcry.com/hot-wheels/hot-wheels-euro-style-die-cast-free-wheel-toy-car-pack-of-6-multicolor/23700381/product-detail"
+    },
+    {
+      "name": "Hotwheels Pantone Land Rover",
+      "url": "https://www.firstcry.com/hot-wheels/hot-wheels-pantone-7504-land-rover-defender-90-die-cast-free-wheel-toy-car-brown/23973353/product-detail"
+    },
+    {
+      "name": "Hotwheels Pantone Volkswagen",
+      "url": "https://www.firstcry.com/hot-wheels/hot-wheels-pantone-2304-custom-personnalise-69-volkswahen-squareback-die-cast-free-wheel-toy-car-light-green/23973354/product-detail"
+    },
+    {
+      "name": "Hotwheels Pantone Toyota",
+      "url": "https://www.firstcry.com/hot-wheels/hot-wheels-pantone-574-20-royota-tacoma-die-cast-free-wheel-toy-car-green/23973355/product-detail"
+    },
+    {
+      "name": "Hotwheels Pantone Rally Finale",
+      "url": "https://www.firstcry.com/hot-wheels/hot-wheels-pantone-2404-rally-finale-die-cast-free-wheel-toy-car-mint/23973356/product-detail"
+    },
+    {
+      "name": "Hotwheels Pantone Sandblaster",
+      "url": "https://www.firstcry.com/hot-wheels/hot-wheels-pantone-4515-sandblaster-die-cast-free-wheel-toy-car-light-khaki/23973359/product-detail"
+    },
+    {
+      "name": "Hotwheels Premium Jaguar",
+      "url": "https://www.firstcry.com/hot-wheels/hot-wheels-die-cast-free-wheel-power-trip-1-5-jaguar-xjs-green/23973360/product-detail"
+    },
+    {
+      "name": "Hotwheels Premium Porsche",
       "url": "https://www.firstcry.com/hot-wheels/hot-wheels-die-cast-free-wheel-power-trip-2-5-porsche-917k-light-blue-and-orange/23973361/product-detail"
+    },
+    {
+      "name": "Hotwheels Premium Corvette",
+      "url": "https://www.firstcry.com/hot-wheels/hot-wheels-die-cast-free-wheel-power-trip-3-5-76-greenwood-corvette-red/23973362/product-detail"
+    },
+    {
+      "name": "Hotwheels Premium Ferrari",
+      "url": "https://www.firstcry.com/hot-wheels/hot-wheels-die-cast-free-wheel-power-trip-4-5-ferrari-250-gto-white/23973363/product-detail"
+    },
+    {
+      "name": "Hotwheels Premium Lancia",
+      "url": "https://www.firstcry.com/hot-wheels/hot-wheels-free-wheel-die-cast-power-trip-5-5-lancia-stratos-off-white/23973364/product-detail"
+    },
+    {
+      "name": "Hotwheels Silver Series RAM",
+      "url": "https://www.firstcry.com/hot-wheels/hot-wheels-2020-ram-1500-rebel-diecast-model-car-blue/24007867/product-detail"
+    },
+    {
+      "name": "Hotwheels Silver Series Ford Bronco",
+      "url": "https://www.firstcry.com/hot-wheels/hot-wheels-ford-bronco-r-diecast-model-car-yellow/24007868/product-detail"
+    },
+    {
+      "name": "Hotwheels Silver Series Silverado",
+      "url": "https://www.firstcry.com/hot-wheels/hot-wheels-2019-chevrolet-silverado-trail-boss-lt-diecast-model-car-silver/24007869/product-detail"
+    },
+    {
+      "name": "Hotwheels Silver Series Silverado Light Brown",
+      "url": "https://www.firstcry.com/hot-wheels/hot-wheels-2019-chevrolet-silverado-trail-boss-lt-toy-car-light-brown/24031181/product-detail"
+    },
+    {
+      "name": "Hotwheels Ferrari 365",
+      "url": "https://www.firstcry.com/hot-wheels/hot-wheels-ferrari-365-gtb4-competizione-toy-car-die-cast-model-with-racing-design-white/24236115/product-detail"
+    },
+    {
+      "name": "Hotwheels Ferrari F1",
+      "url": "https://www.firstcry.com/hot-wheels/hot-wheels-scuderia-ferrarii-hp-120-250-die-cast-toy-car-red-and-black/22548067/product-detail"
     }
+
   ]
 }
