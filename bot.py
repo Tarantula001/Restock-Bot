@@ -1,17 +1,19 @@
 """
-FirstCry restock notifier.
+FirstCry restock notifier (v2 - uses a real headless browser).
 
-Checks each product URL in watchlist.json. When a product that was
-previously out of stock becomes available, sends a Telegram message.
+v1 checked raw page text for phrases like "notify me" — but FirstCry
+includes that text in a hidden template on EVERY product page, in stock
+or not, so v1 misfired constantly. This version actually renders the
+page like a real browser and checks whether the "ADD TO CART" button is
+genuinely visible, which is a much more reliable signal.
 
 Setup:
     1. pip install -r requirements.txt
-    2. Fill in watchlist.json with real product URLs
-    3. Set the TELEGRAM_BOT_TOKEN and TELEGRAM_CHAT_ID environment
-       variables (see README.md for how to get these)
-    4. Run: python bot.py
-       (runs once and exits — see README.md for how to run it on a
-       schedule so it works while you're away)
+    2. playwright install chromium      <-- new one-time step, needed
+       locally AND is handled automatically in the GitHub Actions workflow
+    3. Fill in watchlist.json with real product URLs
+    4. Set TELEGRAM_BOT_TOKEN and TELEGRAM_CHAT_ID environment variables
+    5. Run: python bot.py
 """
 
 import json
@@ -19,33 +21,16 @@ import os
 import sys
 import time
 import requests
-from bs4 import BeautifulSoup
+from playwright.sync_api import sync_playwright
 
 WATCHLIST_FILE = "watchlist.json"
-STATE_FILE = "state.json"  # remembers last known stock status per product, so you're not re-notified every run
+STATE_FILE = "state.json"  # remembers last known stock status so you're only notified on a change
 
 TELEGRAM_BOT_TOKEN = os.environ.get("TELEGRAM_BOT_TOKEN")
 TELEGRAM_CHAT_ID = os.environ.get("TELEGRAM_CHAT_ID")
 
-HEADERS = {
-    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
-                  "(KHTML, like Gecko) Chrome/124.0 Safari/537.36"
-}
-
-# Phrases FirstCry shows on an out-of-stock product page. If a page contains
-# any of these, we treat the product as OUT of stock. Otherwise, in stock.
-#
-# IMPORTANT: verify this against a real out-of-stock FirstCry product page
-# before relying on this bot — open one in your browser, view page source
-# (Ctrl+U), and search for the actual out-of-stock text/button so you can
-# confirm or adjust this list. Site markup changes over time.
-OUT_OF_STOCK_MARKERS = [
-    "notify me",
-    "would be notified by email",
-    "out of stock",
-    "currently unavailable",
-    "sold out",
-]
+USER_AGENT = ("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
+              "(KHTML, like Gecko) Chrome/124.0 Safari/537.36")
 
 
 def load_watchlist():
@@ -66,15 +51,21 @@ def save_state(state):
         json.dump(state, f, indent=2)
 
 
-def check_stock(url: str) -> bool:
-    """Returns True if the product looks in-stock, False if out-of-stock."""
-    resp = requests.get(url, headers=HEADERS, timeout=20)
-    resp.raise_for_status()
-    text = resp.text.lower()
-    for marker in OUT_OF_STOCK_MARKERS:
-        if marker in text:
-            return False
-    return True
+def check_stock(page, url: str) -> bool:
+    """Loads the page in a real browser and checks if ADD TO CART is visible."""
+    page.goto(url, timeout=30000, wait_until="domcontentloaded")
+    # Give client-side JS a moment to finish rendering the buy box.
+    page.wait_for_timeout(2000)
+
+    locator = page.get_by_text("ADD TO CART", exact=False)
+    count = locator.count()
+    for i in range(count):
+        try:
+            if locator.nth(i).is_visible():
+                return True
+        except Exception:
+            continue
+    return False
 
 
 def send_telegram(message: str):
@@ -98,30 +89,36 @@ def main():
 
     state = load_state()
 
-    for product in products:
-        name = product["name"]
-        url = product["url"]
+    with sync_playwright() as p:
+        browser = p.chromium.launch()
+        page = browser.new_page(user_agent=USER_AGENT)
 
-        if "PASTE-PRODUCT-URL-HERE" in url:
-            print(f"Skipping '{name}' — placeholder URL not filled in yet.")
-            continue
+        for product in products:
+            name = product["name"]
+            url = product["url"]
 
-        try:
-            in_stock = check_stock(url)
-        except requests.RequestException as e:
-            print(f"Could not check '{name}': {e}")
-            continue
+            if "PASTE-PRODUCT-URL-HERE" in url:
+                print(f"Skipping '{name}' — placeholder URL not filled in yet.")
+                continue
 
-        was_in_stock = state.get(url, {}).get("in_stock", False)
+            try:
+                in_stock = check_stock(page, url)
+            except Exception as e:
+                print(f"Could not check '{name}': {e}")
+                continue
 
-        if in_stock and not was_in_stock:
-            msg = f"IN STOCK: {name}\n{url}"
-            print(msg)
-            send_telegram(msg)
-        else:
-            print(f"{name}: {'in stock' if in_stock else 'out of stock'} (no change)")
+            was_in_stock = state.get(url, {}).get("in_stock", False)
 
-        state[url] = {"in_stock": in_stock, "checked_at": time.time()}
+            if in_stock and not was_in_stock:
+                msg = f"IN STOCK: {name}\n{url}"
+                print(msg)
+                send_telegram(msg)
+            else:
+                print(f"{name}: {'in stock' if in_stock else 'out of stock'} (no change)")
+
+            state[url] = {"in_stock": in_stock, "checked_at": time.time()}
+
+        browser.close()
 
     save_state(state)
 

@@ -2,10 +2,12 @@ name: Check FirstCry stock
 
 on:
   schedule:
-    # every 15 minutes. GitHub's minimum is 5 minutes, but scheduled runs
-    # can lag under load — 15 is a reliable, low-drama interval to start with.
-    - cron: "*/15 * * * *"
-  workflow_dispatch: {}  # lets you trigger a manual run from the Actions tab to test
+    # GitHub's own scheduler is best-effort and can be delayed by a lot —
+    # this is kept only as a loose backup. The real, reliable schedule is
+    # driven externally via cron-job.org calling workflow_dispatch below
+    # (see README.md, section C).
+    - cron: "13 * * * *"
+  workflow_dispatch: {}  # triggered manually, or by an external scheduler (cron-job.org)
 
 jobs:
   check:
@@ -17,12 +19,24 @@ jobs:
         with:
           python-version: "3.11"
 
-      - name: Install dependencies
+      - name: Install Python dependencies
         run: pip install -r requirements.txt
 
+      # Caches the downloaded Chromium browser so most runs don't have to
+      # re-download it — this is what keeps each run fast and cheap.
+      - name: Cache Playwright browsers
+        uses: actions/cache@v4
+        id: playwright-cache
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-chromium-${{ runner.os }}
+
+      - name: Install Chromium
+        run: python -m playwright install --with-deps chromium
+
       # state.json remembers what was last seen in/out of stock, so you
-      # only get notified on a *change*, not every 15 minutes.
-      - name: Restore state
+      # only get notified on a *change*, not every run.
+      - name: Restore watch state
         uses: actions/cache@v4
         with:
           path: state.json
@@ -36,7 +50,7 @@ jobs:
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
         run: python bot.py
 
-      - name: Save state
+      - name: Save watch state
         uses: actions/cache@v4
         with:
           path: state.json

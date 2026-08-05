@@ -1,97 +1,111 @@
-# FirstCry restock notifier
+# FirstCry restock notifier (v2)
 
-Watches FirstCry product pages (LEGO, Hot Wheels, anything) and pings you
-on Telegram the moment something goes from out-of-stock to in-stock.
+Watches FirstCry product pages and pings you on Telegram the moment
+something goes from out-of-stock to in-stock.
 
-## 1. Test it locally first
+**v2 changes:** the old version checked raw page text, which caused false
+"out of stock" alerts (FirstCry hides a "Notify Me" template in every
+product page's HTML, in stock or not). v2 uses a real headless browser
+(Playwright) and checks whether the "ADD TO CART" button is actually
+visible — a much more reliable signal. This also fixes the "runs every
+2+ hours instead of every 15 minutes" problem by no longer depending on
+GitHub's own scheduler (see Section C).
+
+## A. Test it locally
 
 ```
-cd restock-bot
 pip install -r requirements.txt
+playwright install chromium
 ```
 
-Open `watchlist.json` and replace the placeholder URLs with real FirstCry
-product page URLs (open the product on firstcry.com, copy the URL — it
-should end in `/product-detail`).
+Edit `watchlist.json` with real FirstCry product URLs (copy the pattern —
+each entry is a `{ "name": ..., "url": ... }` block, comma-separated, no
+comma after the last one).
 
-Run it once:
-
+Run once:
 ```
 python bot.py
 ```
 
-You should see each product printed as "in stock" or "out of stock". If a
-product is wrongly detected, see the **Verify detection** section below
-before relying on this.
+You should see accurate in-stock/out-of-stock lines per product.
 
-## 2. Set up Telegram alerts (5 minutes)
+## B. Telegram alerts
 
-1. In Telegram, message **@BotFather**, send `/newbot`, follow the prompts.
-   You'll get a **bot token** that looks like `123456789:AAExample...`.
-2. Send any message (e.g. "hi") to your new bot from your own account —
-   Telegram bots can't message you until you've messaged them first.
-3. Visit this URL in a browser (with your real token):
-   `https://api.telegram.org/bot<YOUR_TOKEN>/getUpdates`
-   Find `"chat":{"id":123456789,...}` in the response — that number is
-   your **chat ID**.
-4. Set both as environment variables and re-run:
+(Same as before — skip if you already did this.)
 
+1. Message **@BotFather** on Telegram, send `/newbot`, follow the prompts,
+   save the token it gives you.
+2. Open a chat with your new bot and send it any message first.
+3. Visit `https://api.telegram.org/bot<TOKEN>/getUpdates` in a browser —
+   find `"chat":{"id":...}` — that number is your chat ID.
+4. Test locally:
    ```
-   set TELEGRAM_BOT_TOKEN=123456789:AAExample...      (Windows cmd)
-   set TELEGRAM_CHAT_ID=123456789
+   $env:TELEGRAM_BOT_TOKEN="your-token"
+   $env:TELEGRAM_CHAT_ID="your-chat-id"
    python bot.py
    ```
 
-   (On Mac/Linux use `export` instead of `set`.)
+## C. Reliable scheduling (important — read this)
 
-You should get a Telegram message for anything currently in stock the
-first time you run it (since it has no prior state yet).
+GitHub's built-in `schedule:` cron trigger is best-effort only — it can be
+delayed by hours, especially on repos without much other Actions
+activity. This is a widely reported GitHub limitation, not something
+specific to your setup. The workaround: use a free external service to
+trigger the workflow on a real schedule via GitHub's API, instead of
+relying on GitHub's own clock.
 
-## 3. Make it run while you're away (free, no PC needed)
+**1. Create a GitHub token** so an outside service is allowed to trigger
+your workflow:
+   - Go to github.com → your profile photo (top right) → **Settings**
+   - Left sidebar, scroll down → **Developer settings**
+   - **Personal access tokens** → **Fine-grained tokens** → **Generate new token**
+   - Give it a name like `restock-bot-trigger`
+   - Under **Repository access**, choose "Only select repositories" → pick `restock-bot`
+   - Under **Permissions** → **Repository permissions**, find **Actions** → set to **Read and write**
+   - Generate it, and **copy the token immediately** (starts with `github_pat_...`) — you won't see it again.
 
-This is the part that covers "even when I'm not there":
+**2. Set up cron-job.org**
+   - Go to cron-job.org, create a free account.
+   - Click **Create cronjob**.
+   - **Title**: `restock-bot trigger`
+   - **URL**:
+     ```
+     https://api.github.com/repos/Tarantula001/restock-bot/actions/workflows/check-stock.yml/dispatches
+     ```
+   - **Schedule**: every 60 minutes (matches the free-minutes budget from earlier — you can go lower later if you switch the repo to public)
+   - Under **Advanced** (or "Request method/headers" section):
+     - Request method: **POST**
+     - Add these headers:
+       - `Authorization` → `Bearer <your token from step 1>`
+       - `Accept` → `application/vnd.github+json`
+       - `Content-Type` → `application/json`
+     - Request body:
+       ```
+       {"ref":"main"}
+       ```
+   - Save.
 
-1. Create a free GitHub account if you don't have one, and a **private**
-   repo (private matters — don't make your watchlist public).
-2. Push this whole folder to that repo.
-3. In the repo: **Settings → Secrets and variables → Actions → New
-   repository secret**. Add two secrets:
-   - `TELEGRAM_BOT_TOKEN`
-   - `TELEGRAM_CHAT_ID`
-4. Go to the **Actions** tab, enable workflows if prompted. The included
-   workflow (`.github/workflows/check-stock.yml`) will now run
-   automatically every 15 minutes, forever, for free — no computer of
-   yours needs to be on.
-5. You can trigger a manual test run any time from the Actions tab
-   ("Run workflow" button) instead of waiting for the schedule.
+**3. Test it**: on the cron-job.org job page, there's usually a "Run now" /
+   "Execute" button — click it, then check your GitHub repo's Actions tab.
+   A new run should appear within seconds, labeled as triggered by
+   `workflow_dispatch`. Check Telegram too if anything's in stock.
 
-To add or remove products later, just edit `watchlist.json` and push the
-change — no need to touch the workflow.
+From here it runs on its own, reliably, on the schedule you set in
+cron-job.org — not GitHub's flaky internal clock.
 
-## Verify detection before you trust it
+## Cost note
 
-I built the out-of-stock detection (`OUT_OF_STOCK_MARKERS` in `bot.py`)
-based on FirstCry's out-of-stock "Notify Me" form text, but I haven't
-loaded a real out-of-stock FirstCry product page to confirm the exact
-wording still matches — sites change this over time. Before relying on
-this:
+Every run — whether triggered by cron-job.org or GitHub's own scheduler —
+uses the same GitHub Actions minutes. A private repo gets ~2,000 free
+minutes/month; a public repo gets unlimited. With the real-browser check,
+hourly runs should land safely inside the free private-repo budget, but
+actual cost depends on your watchlist size. Check real usage anytime:
+github.com → profile photo → **Settings** → **Billing and plans** →
+**Actions minutes**.
 
-1. Find a FirstCry product that's currently out of stock.
-2. View page source (Ctrl+U in your browser) and search for whatever text
-   appears near the "Notify Me" button.
-3. Compare it against the list in `bot.py` and adjust if needed.
+## Verifying detection
 
-## A couple of things worth knowing
-
-- **Polling interval**: 15 minutes is deliberately conservative to avoid
-  hammering FirstCry's servers or tripping any bot-detection. You can
-  lower the cron interval if you want faster alerts, but faster polling
-  = higher chance of your requests getting rate-limited or blocked.
-- **Pincode-dependent stock**: FirstCry shows availability based on a
-  delivery pincode. This script checks the page as an anonymous visitor,
-  so double check the product is actually deliverable to *you* before
-  rushing to buy.
-- **This only notifies — it doesn't buy anything.** You still complete
-  checkout yourself, which sidesteps FirstCry's login/OTP/payment flow
-  entirely (all of which would be a much bigger, more fragile project to
-  automate).
+The "ADD TO CART" text check should be far more reliable than v1's text
+search, but if you ever see a product misreported, check the run's logs
+(Actions tab → the run → "Run stock check" step) — it'll tell you exactly
+what it saw.
